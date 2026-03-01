@@ -11,15 +11,19 @@
             --secondary-color: #ff00ff;
             --glow-spread: 10px;
         }
-        body {
+        /* 超高性能AIによる余白極小・埋め込み最適化設定！ */
+        html, body {
             background-color: transparent;
             color: var(--primary-color);
             font-family: 'Courier New', Courier, monospace;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            /* 100vhではなく100%にすることでNotionの枠にピッタリ追従 */
+            width: 100%;
+            height: 100%;
             margin: 0;
+            padding: 0;
             overflow: hidden;
             flex-direction: column;
         }
@@ -28,28 +32,24 @@
             position: relative;
             width: 300px;
             height: 300px;
+            /* 縮小してもはみ出さないように最大サイズを固定 */
+            max-width: 300px;
+            max-height: 300px;
             border: 4px solid var(--primary-color);
             border-radius: 50%;
             box-shadow: 0 0 var(--glow-spread) var(--primary-color), inset 0 0 var(--glow-spread) var(--primary-color);
             display: flex;
             justify-content: center;
             align-items: center;
-            background: radial-gradient(circle, rgba(0,0,0,0.8) 0%, var(--bg-color) 100%);
+            background: radial-gradient(circle, rgba(0,0,0,0.9) 0%, var(--bg-color) 100%);
+            margin: 0; /* 無駄なマージンを完全排除 */
         }
-        .center-dot {
-            width: 12px;
-            height: 12px;
-            background-color: var(--secondary-color);
-            border-radius: 50%;
-            position: absolute;
-            z-index: 10;
-            box-shadow: 0 0 10px var(--secondary-color);
-        }
+        /* 針のスタイル */
         .hand {
             position: absolute;
             bottom: 50%;
             left: 50%;
-            transform-origin: bottom;
+            transform-origin: bottom center;
             border-radius: 4px;
             z-index: 5;
         }
@@ -75,23 +75,23 @@
             box-shadow: 0 0 8px var(--secondary-color);
             z-index: 6;
         }
-        /* デジタル表示を「ど真ん中」にし、針の上に配置！ */
+        /* デジタル表示（完全など真ん中・最前面） */
         .digital-display {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 24px;
+            font-size: 26px;
             font-weight: bold;
             color: var(--primary-color);
-            text-shadow: 0 0 8px var(--primary-color);
+            text-shadow: 0 0 10px var(--primary-color);
             letter-spacing: 2px;
-            z-index: 20; /* 針より前面に配置 */
-            background: rgba(0, 0, 0, 0.85); /* 視認性を高める背景 */
-            padding: 6px 15px;
+            z-index: 30; 
+            background: rgba(0, 0, 0, 0.9); 
+            padding: 8px 16px;
             border-radius: 8px;
             border: 1px solid var(--primary-color);
-            box-shadow: 0 0 10px rgba(0,0,0,0.8);
+            box-shadow: 0 0 15px rgba(0,0,0,1), inset 0 0 8px var(--primary-color);
         }
         /* 文字盤の数字スタイル */
         #numbers-container {
@@ -105,7 +105,7 @@
             width: 100%;
             height: 100%;
             text-align: center;
-            font-size: 20px;
+            font-size: 22px;
             font-weight: bold;
             color: var(--primary-color);
             text-shadow: 0 0 8px var(--primary-color);
@@ -113,72 +113,51 @@
         }
         .clock-number span {
             display: inline-block;
-            padding-top: 15px;
+            padding-top: 12px;
         }
         /* 設定パネルのスタイル */
         #settings-panel {
-            margin-top: 30px;
-            padding: 20px;
+            margin-top: 20px;
+            padding: 15px;
             border: 1px solid var(--primary-color);
             background: rgba(0, 0, 0, 0.85);
             border-radius: 10px;
             box-shadow: 0 0 15px var(--primary-color);
             text-align: center;
-            z-index: 30;
+            z-index: 40;
         }
         .setting-row {
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 20px;
+            gap: 15px;
         }
         input[type="color"] {
-            cursor: pointer;
-            background: none;
-            border: none;
-            height: 30px;
+            cursor: pointer; background: none; border: none; height: 25px;
         }
         input[type="checkbox"] {
-            cursor: pointer;
-            width: 20px;
-            height: 20px;
-            accent-color: var(--secondary-color);
+            cursor: pointer; width: 18px; height: 18px; accent-color: var(--secondary-color);
         }
         button {
-            background-color: transparent;
-            color: var(--secondary-color);
-            border: 2px solid var(--secondary-color);
-            padding: 10px 20px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-shadow: 0 0 5px var(--secondary-color);
-            box-shadow: 0 0 10px var(--secondary-color) inset;
-            margin-top: 10px;
+            background-color: transparent; color: var(--secondary-color);
+            border: 2px solid var(--secondary-color); padding: 8px 16px;
+            font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.3s ease;
+            text-shadow: 0 0 5px var(--secondary-color); box-shadow: 0 0 8px var(--secondary-color) inset;
+            margin-top: 5px;
         }
         button:hover {
-            background-color: var(--secondary-color);
-            color: #fff;
-            box-shadow: 0 0 20px var(--secondary-color);
+            background-color: var(--secondary-color); color: #fff; box-shadow: 0 0 15px var(--secondary-color);
         }
         #url-output {
-            margin-top: 15px;
-            word-break: break-all;
-            font-size: 12px;
-            max-width: 400px;
-            padding: 10px;
-            background: #000;
-            border: 1px solid var(--primary-color);
-            display: none;
+            margin-top: 10px; word-break: break-all; font-size: 11px; max-width: 380px;
+            padding: 8px; background: #000; border: 1px solid var(--primary-color); display: none;
         }
     </style>
 </head>
 <body>
 
     <div class="clock-container">
-        <div class="center-dot"></div>
         <div id="numbers-container"></div>
         <div class="hand hour-hand" id="hour-hand"></div>
         <div class="hand minute-hand" id="minute-hand"></div>
@@ -187,21 +166,21 @@
     </div>
 
     <div id="settings-panel">
-        <h3 style="margin-top:0;">🔧 Clock Settings</h3>
+        <h3 style="margin-top:0; font-size: 16px;">🔧 Clock Settings</h3>
         <div class="setting-row">
-            <label>Clock Inner BG:</label>
+            <label style="font-size: 12px;">Inner BG:</label>
             <input type="color" id="bg-color" value="#0b0c10">
         </div>
         <div class="setting-row">
-            <label>Primary (Neon):</label>
+            <label style="font-size: 12px;">Primary:</label>
             <input type="color" id="primary-color" value="#00ffff">
         </div>
         <div class="setting-row">
-            <label>Secondary (Accent):</label>
+            <label style="font-size: 12px;">Secondary:</label>
             <input type="color" id="secondary-color" value="#ff00ff">
         </div>
         <div class="setting-row">
-            <label>Show Numbers:</label>
+            <label style="font-size: 12px;">Show Numbers:</label>
             <input type="checkbox" id="show-numbers" checked>
         </div>
         <button onclick="generateURL()">Notion用URLを発行</button>
@@ -209,7 +188,6 @@
     </div>
 
     <script>
-        // 数字の自動生成と配置
         const numbersContainer = document.getElementById('numbers-container');
         for (let i = 1; i <= 12; i++) {
             const numDiv = document.createElement('div');
@@ -224,34 +202,22 @@
             numbersContainer.appendChild(numDiv);
         }
 
-        // URLパラメータの取得と適用
         const params = new URLSearchParams(window.location.search);
         const isEmbed = params.get('embed') === 'true';
-        
         const root = document.documentElement;
-        if (params.has('bg')) {
-            root.style.setProperty('--bg-color', '#' + params.get('bg'));
-            document.getElementById('bg-color').value = '#' + params.get('bg');
-        }
-        if (params.has('primary')) {
-            root.style.setProperty('--primary-color', '#' + params.get('primary'));
-            document.getElementById('primary-color').value = '#' + params.get('primary');
-        }
-        if (params.has('secondary')) {
-            root.style.setProperty('--secondary-color', '#' + params.get('secondary'));
-            document.getElementById('secondary-color').value = '#' + params.get('secondary');
-        }
+        
+        if (params.has('bg')) { root.style.setProperty('--bg-color', '#' + params.get('bg')); document.getElementById('bg-color').value = '#' + params.get('bg'); }
+        if (params.has('primary')) { root.style.setProperty('--primary-color', '#' + params.get('primary')); document.getElementById('primary-color').value = '#' + params.get('primary'); }
+        if (params.has('secondary')) { root.style.setProperty('--secondary-color', '#' + params.get('secondary')); document.getElementById('secondary-color').value = '#' + params.get('secondary'); }
         if (params.has('num')) {
             const showNum = params.get('num') === 'true';
             document.getElementById('show-numbers').checked = showNum;
             numbersContainer.style.display = showNum ? 'block' : 'none';
         }
 
-        // Notion埋め込みモードなら設定パネルを隠す
         if (isEmbed) {
             document.getElementById('settings-panel').style.display = 'none';
         } else {
-            // リアルタイムプレビュー
             const updateColors = () => {
                 root.style.setProperty('--bg-color', document.getElementById('bg-color').value);
                 root.style.setProperty('--primary-color', document.getElementById('primary-color').value);
@@ -266,7 +232,6 @@
             });
         }
 
-        // 時計の更新処理
         function updateClock() {
             const now = new Date();
             const hours = now.getHours();
@@ -287,19 +252,19 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        // URL発行機能
         function generateURL() {
             const bg = document.getElementById('bg-color').value.substring(1);
             const primary = document.getElementById('primary-color').value.substring(1);
             const secondary = document.getElementById('secondary-color').value.substring(1);
             const showNum = document.getElementById('show-numbers').checked;
             
+            const ts = new Date().getTime();
             const baseUrl = window.location.origin + window.location.pathname;
-            const generatedUrl = `${baseUrl}?embed=true&bg=${bg}&primary=${primary}&secondary=${secondary}&num=${showNum}`;
+            const generatedUrl = `${baseUrl}?embed=true&bg=${bg}&primary=${primary}&secondary=${secondary}&num=${showNum}&v=${ts}`;
             
             const outputBox = document.getElementById('url-output');
             outputBox.style.display = 'block';
-            outputBox.innerHTML = `<strong>コピーしてNotionに埋め込んでください:</strong><br><br>${generatedUrl}`;
+            outputBox.innerHTML = `<strong>新しいURLをNotionに埋め込み直してください:</strong><br><br>${generatedUrl}`;
             
             navigator.clipboard.writeText(generatedUrl).then(() => {
                 outputBox.innerHTML += `<br><br><span style="color:var(--secondary-color)">クリップボードにコピーしました！</span>`;
