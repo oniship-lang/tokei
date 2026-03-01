@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Aira Cyberpunk Clock Gen</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background-color: #0b0c10; color: #45f3ff; font-family: 'Share Tech Mono', monospace; }
+  
+  /* アプリUI画面 */
+  #app-ui { display: flex; flex-direction: column; padding: 20px; max-width: 900px; margin: 0 auto; }
+  .header { text-align: center; text-transform: uppercase; letter-spacing: 3px; border-bottom: 2px solid #ea00d9; margin-bottom: 20px; padding-bottom: 10px; text-shadow: 0 0 10px #ea00d9; }
+  
+  .container { display: flex; gap: 30px; flex-wrap: wrap; }
+  .controls { flex: 1; min-width: 300px; background: rgba(11, 12, 16, 0.8); border: 1px solid #45f3ff; padding: 20px; box-shadow: 0 0 15px rgba(69, 243, 255, 0.2); }
+  .control-group { margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+  input[type="color"] { cursor: pointer; background: #000; border: 1px solid #45f3ff; height: 30px; }
+  input[type="number"], select { background: #000; color: #45f3ff; border: 1px solid #45f3ff; padding: 5px; width: 120px; font-family: inherit; font-size: 1rem; }
+  
+  /* プレビュー画面 */
+  .preview-section { flex: 1; min-width: 350px; display: flex; flex-direction: column; align-items: center; }
+  #preview-container { width: 100%; height: 250px; border: 2px dashed #ea00d9; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; background-color: #050505; overflow: hidden; position: relative; }
+  
+  button { width: 100%; padding: 15px; margin-top: 10px; background: transparent; color: #ea00d9; border: 2px solid #ea00d9; cursor: pointer; font-family: 'Orbitron', sans-serif; font-size: 1.2rem; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; transition: all 0.3s; text-shadow: 0 0 5px #ea00d9; }
+  button:hover { background: #ea00d9; color: #000; box-shadow: 0 0 20px #ea00d9; }
+  
+  #outputUrl { width: 100%; padding: 15px; margin-top: 15px; background: #000; color: #fff; border: 1px solid #ea00d9; font-family: monospace; box-sizing: border-box; }
+  
+  /* 時計本体（プレビュー＆本番共通） */
+  #clock-display { font-weight: 700; letter-spacing: 4px; white-space: nowrap; transition: text-shadow 0.2s; }
+  
+  /* 本番用フルスクリーン設定 */
+  .fullscreen { height: 100vh !important; width: 100vw !important; border: none !important; margin: 0 !important; }
+</style>
+</head>
+<body>
+
+<div id="app-ui">
+  <div class="header">
+    <h2>⚡ Aira_Cyber_Clock.exe ⚡</h2>
+  </div>
+  
+  <div class="container">
+    <div class="controls">
+      <div class="control-group">
+        <label>背景色 (Base):</label>
+        <input type="color" id="bgColor" value="#050505" oninput="updatePreview()">
+      </div>
+      <div class="control-group">
+        <label>ネオン色 (Neon):</label>
+        <input type="color" id="textColor" value="#00ffff" oninput="updatePreview()">
+      </div>
+      <div class="control-group">
+        <label>発光強度 (Glow):</label>
+        <input type="number" id="glowSize" value="15" min="0" max="50" oninput="updatePreview()">
+      </div>
+      <div class="control-group">
+        <label>文字サイズ (rem):</label>
+        <input type="number" id="fontSize" value="3.5" step="0.5" oninput="updatePreview()">
+      </div>
+      <div class="control-group">
+        <label>フォント (Type):</label>
+        <select id="fontFamily" onchange="updatePreview()">
+          <option value="'Share Tech Mono', monospace">Terminal (Mono)</option>
+          <option value="'Orbitron', sans-serif">Mecha (Orbitron)</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>ミリ秒表示:</label>
+        <select id="showMs" onchange="updatePreview()">
+          <option value="false">OFF</option>
+          <option value="true">ON (ハッカー風)</option>
+        </select>
+      </div>
+      
+      <button onclick="generateURL()">[ GENERATE_URL ]</button>
+      <input type="text" id="outputUrl" readonly placeholder="ここにNotion埋め込み用URLが出力されます...">
+    </div>
+    
+    <div class="preview-section">
+      <div style="margin-bottom: 10px; color: #ea00d9; font-family: 'Orbitron', sans-serif;">[ LIVE PREVIEW ]</div>
+      <div id="preview-container">
+        <div id="clock-display">00:00:00</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="embed-root" style="display: none; align-items: center; justify-content: center;">
+  <div id="clock-display-embed">00:00:00</div>
+</div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const isClockMode = params.get('mode') === 'clock';
+  
+  // 設定値の取得（URLパラメーター優先）
+  let config = {
+    bg: params.get('bg') || '#050505',
+    text: params.get('text') || '#00ffff',
+    glow: params.get('glow') || '15',
+    size: params.get('size') || '3.5',
+    font: params.get('font') || "'Share Tech Mono', monospace",
+    ms: params.get('ms') === 'true'
+  };
+
+  if (isClockMode) {
+    // 埋め込みモード時：UIを隠して時計だけをフルスクリーン表示
+    document.getElementById('app-ui').style.display = 'none';
+    const embedRoot = document.getElementById('embed-root');
+    embedRoot.style.display = 'flex';
+    embedRoot.className = 'fullscreen';
+    
+    const clockEmbed = document.getElementById('clock-display-embed');
+    
+    // レイアウト適用
+    embedRoot.style.backgroundColor = config.bg;
+    clockEmbed.style.color = config.text;
+    clockEmbed.style.textShadow = `0 0 ${config.glow}px ${config.text}, 0 0 ${config.glow/2}px #ffffff`;
+    clockEmbed.style.fontSize = config.size + 'rem';
+    clockEmbed.style.fontFamily = config.font;
+    
+    startClock(clockEmbed, config.ms);
+  } else {
+    // アプリモード時：初期状態のプレビューを描画
+    updatePreview();
+    startClock(document.getElementById('clock-display'), false);
+  }
+
+  // 設定変更をリアルタイムにプレビューへ反映
+  function updatePreview() {
+    const bg = document.getElementById('bgColor').value;
+    const text = document.getElementById('textColor').value;
+    const glow = document.getElementById('glowSize').value;
+    const size = document.getElementById('fontSize').value;
+    const font = document.getElementById('fontFamily').value;
+    const ms = document.getElementById('showMs').value === 'true';
+    
+    const previewContainer = document.getElementById('preview-container');
+    const clockDisplay = document.getElementById('clock-display');
+    
+    previewContainer.style.backgroundColor = bg;
+    clockDisplay.style.color = text;
+    // ネオン風の2重シャドウ
+    clockDisplay.style.textShadow = `0 0 ${glow}px ${text}, 0 0 ${glow/2}px #ffffff`;
+    clockDisplay.style.fontSize = size + 'rem';
+    clockDisplay.style.fontFamily = font;
+    
+    startClock(clockDisplay, ms);
+  }
+
+  let clockInterval;
+  function startClock(element, showMs) {
+    if(clockInterval) clearInterval(clockInterval);
+    
+    function updateTime() {
+      const now = new Date();
+      let timeString = now.toLocaleTimeString('ja-JP', { hour12: false });
+      
+      if(showMs) {
+        // ミリ秒を3桁で追加
+        const ms = String(now.getMilliseconds()).padStart(3, '0');
+        timeString += `:${ms}`;
+      }
+      element.textContent = timeString;
+    }
+    
+    // ミリ秒表示なら50ms間隔、通常なら1000ms間隔で更新
+    const intervalTime = showMs ? 50 : 1000;
+    clockInterval = setInterval(updateTime, intervalTime);
+    updateTime();
+  }
+
+  function generateURL() {
+    const bg = document.getElementById('bgColor').value;
+    const text = document.getElementById('textColor').value;
+    const glow = document.getElementById('glowSize').value;
+    const size = document.getElementById('fontSize').value;
+    const font = document.getElementById('fontFamily').value;
+    const ms = document.getElementById('showMs').value;
+    
+    const baseUrl = window.location.href.split('?')[0];
+    const newUrl = `${baseUrl}?mode=clock&bg=${encodeURIComponent(bg)}&text=${encodeURIComponent(text)}&glow=${glow}&size=${size}&font=${encodeURIComponent(font)}&ms=${ms}`;
+    document.getElementById('outputUrl').value = newUrl;
+  }
+</script>
+</body>
+</html>
